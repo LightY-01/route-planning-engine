@@ -1,2 +1,2 @@
-# route-planning-engine
-A high-performance C++ route planning engine that implements Dijkstra, A*, and Bidirectional Dijkstra on real-world OpenStreetMap (OSM) city networks.
+# Route Planning Engine
+A high-performance Route Planning Engine built in C++ that computes optimal shortest paths on real city GPS networks. Utilizing OpenStreetMap (OSM) data, the engine operates on a true city-scale graph. It implements and benchmarks standard Dijkstra, A* (using an admissible Haversine heuristic), and Bidirectional Dijkstra algorithms to evaluate query speedups at long distances. The project features a complete pipeline, including a Python-based preprocessor for extracting drivable road networks and a lightweight local web interface for interactive route visualization.
