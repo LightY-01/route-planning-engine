@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Route Planning Engine</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #status-box {
+            position: absolute;
+            top: 20px;
+            left: 60px;
+            z-index: 1000;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="status-box">Click on the map to set your Start point</div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Mumbai (using approximate coordinates from your bounding box)
+        const map = L.map('map').setView([19.049, 72.922], 11);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let startPoint = null;
+        let endPoint = null;
+        let startMarker = null;
+        let endMarker = null;
+        let routePolyline = null;
+
+        map.on('click', async function (e) {
+            if (!startPoint) {
+                // First click: Set Start
+                startPoint = e.latlng;
+                startMarker = L.marker(startPoint).addTo(map).bindPopup("Start").openPopup();
+                document.getElementById('status-box').innerText = "Click to set End point";
+            }
+            else if (!endPoint) {
+                // Second click: Set End & Fetch Route
+                endPoint = e.latlng;
+                endMarker = L.marker(endPoint).addTo(map).bindPopup("End").openPopup();
+                document.getElementById('status-box').innerText = "Calculating optimal route...";
+
+                try {
+                    // Send coordinates to your Flask server on port 29000
+                    const response = await fetch('/find_path', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            start_lat: startPoint.lat,
+                            start_lon: startPoint.lng,
+                            end_lat: endPoint.lat,
+                            end_lon: endPoint.lng
+                        })
+                    });
+
+                    const pathData = await response.json();
+
+                    // Check the .path property instead of the whole object
+                    if (!pathData.path || !Array.isArray(pathData.path) || pathData.path.length === 0) {
+                        document.getElementById('status-box').innerText = "No path found. Click to reset.";
+                        return;
+                    }
+
+                    // Draw the returned JSON array of coordinates
+                    routePolyline = L.polyline(pathData.path, { color: 'blue', weight: 5, opacity: 0.7 }).addTo(map);
+                    map.fitBounds(routePolyline.getBounds());
+
+                    document.getElementById('status-box').innerText = "Route Found! Click anywhere to reset.";
+                } catch (error) {
+                    console.error("Routing error:", error);
+                    document.getElementById('status-box').innerText = "Error calculating route. Click to reset.";
+                }
+            }
+            else {
+                // Third click: Reset Map
+                startPoint = null;
+                endPoint = null;
+                map.removeLayer(startMarker);
+                map.removeLayer(endMarker);
+                if (routePolyline) map.removeLayer(routePolyline);
+                document.getElementById('status-box').innerText = "Click on the map to set your Start point";
+            }
+        });
+    </script>
+</body>
+
+</html>

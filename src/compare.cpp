@@ -1,4 +1,3 @@
-#define _USE_MATH_DEFINES
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -9,7 +8,6 @@
 #include <limits>
 #include <cmath>
 #include <chrono>
-#include <iomanip>
 
 // Graph Adjacency List Structure
 // The outer vector is the source_id, inner vector holds pairs of (target_id, weight)
@@ -45,7 +43,7 @@ void loadGraph(Graph &graph, const std::string& filename) {
     }
 
     edge_file.close();
-    // std::cout << "Graph loaded successfully.\n";
+    std::cout << "Graph loaded successfully.\n";
 }
 
 void loadNodes(Nodes &nodes, const std::string& filename){
@@ -67,17 +65,17 @@ void loadNodes(Nodes &nodes, const std::string& filename){
 
         std::getline(iss, token, ',');
         lat = std::stod(token);
-        lat *= (M_PI / 180.0); // convert to radians
+        lat *= 0.0174533; // convert to radians
 
         std::getline(iss, token, ',');
         lon = std::stod(token);
-        lon *= (M_PI / 180.0); // convert to radians
+        lon *= 0.0174533; // convert to radians
 
         nodes[u] = {lat,lon};
     }
 
     node_file.close();
-    // std::cout << "Nodes loaded successfully.\n";
+    std::cout << "Nodes loaded successfully.\n";
 }
 
 // Dijkstra's algorithm implementation
@@ -163,41 +161,12 @@ std::pair<double, std::vector<int>> aStar(Graph &graph,Nodes &nodes,int start, i
     return {dist[end], path};
 }
 
-int getNearestNode(double target_lat, double target_lon, Nodes &nodes){
-    int nearest_node = -1;
-    double min_dist = inf;
-
-    double lat_rad = target_lat * (M_PI / 180.0);
-    double lon_rad = target_lon * (M_PI / 180.0);
-
-    for (size_t i = 0; i < nodes.size(); i++){
-        double dist = heuristic(lat_rad,lon_rad,nodes[i].first,nodes[i].second);
-        if (dist < min_dist){
-            min_dist = dist;
-            nearest_node = i;
-        }
+void printPath(std::vector<int> &path){
+    std::cout << "Path: ";
+    for (int node: path){
+        std::cout << node << " ";
     }
-    return nearest_node;
-}
-
-void printPath(Nodes &nodes, std::vector<int> &path){
-    std::cout << "[\n";
-    std::cout << std::fixed << std::setprecision(7);
-    for (size_t i = 0; i < path.size() - 1; i++){
-        double lat = nodes[path[i]].first;
-        double lon = nodes[path[i]].second;
-        double lat_deg = lat * (180.0 / M_PI);
-        double lon_deg = lon * (180.0 / M_PI);
-        std::cout << "[" << lat_deg << ", " << lon_deg << "],\n";
-    }
-    // Add last node
-    double lat = nodes[path[path.size() - 1]].first;
-    double lon = nodes[path[path.size() - 1]].second;
-    double lat_deg = lat * (180.0 / M_PI);
-    double lon_deg = lon * (180.0 / M_PI);
-    std::cout << "[" << lat_deg << ", " << lon_deg << "]\n";
-
-    std::cout << "]\n";
+    std::cout << "\n";
 }
 
 int main() {
@@ -209,24 +178,37 @@ int main() {
     loadNodes(nodes, "data/nodes.csv");
     loadGraph(graph, "data/edges.csv");
 
-    double start_lat, start_lon, end_lat, end_lon;
-    // Waits for the Python server to pipe in the start and end nodes
-    if (std::cin >> start_lat >> start_lon >> end_lat >> end_lon) {
+    while (true){
+        int start_node, end_node;
+        std::cout << "Enter start node: ";
+        std::cin >> start_node;
 
-        int start_node = getNearestNode(start_lat, start_lon, nodes);
-        int end_node = getNearestNode(end_lat, end_lon, nodes);
+        std::cout << "Enter end node: ";
+        std::cin >> end_node;
 
-        // Run A*
-        auto [a_distance, a_path] = aStar(graph, nodes, start_node, end_node);
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto [distance, path] = dijkstra(graph, start_node, end_node);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> dijkstra_time = end_time - start_time;
         
+        if (distance != inf){
+            std::cout << "Shortest distance: " << distance << "\n";
+            std::cout << "Dijkstra's algorithm execution time: " << dijkstra_time.count() << " ms\n";
+            // printPath(path);
+        }
+        else std::cout << "No path found!\n";
+
+        start_time = std::chrono::high_resolution_clock::now();
+        auto [a_distance, a_path] = aStar(graph, nodes, start_node, end_node);
+        end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> astar_time = end_time - start_time;
+
         if (a_distance != inf){
-            // Prints strict JSON array
-            printPath(nodes, a_path); 
+            std::cout << "Shortest distance: " << a_distance << "\n";
+            std::cout << "A* algorithm execution time: " << astar_time.count() << " ms\n";
+            // printPath(a_path);
         }
-        else {
-            // Empty JSON array if no path is found
-            std::cout << "[]\n"; 
-        }
+        else std::cout << "No path found!\n";
     }
     
     return 0;
