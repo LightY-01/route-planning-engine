@@ -88,7 +88,7 @@ This restored full navigability to local roads and successfully eliminated the d
 
 ## 📂 Project Structure
 
-* `src/main.cpp`: C++ search engine. Loads nodes/edges, finds paths using A* and Dijkstra, and outputs paths in JSON.
+* `main.cpp`: C++ search engine. Loads nodes/edges, finds paths using A* and Dijkstra, and outputs paths in JSON.
 * `scripts/preprocess.py`: Extracts and maps nodes and edges from raw OSM data.
 * `web/app.py`: Flask application exposing `/find_path` to handle frontend routing requests.
 * `data/`: Contains raw `.osm.pbf` and processed `nodes.csv` and `edges.csv` files.
@@ -111,9 +111,9 @@ python preprocess.py
 This extracts the driving network and outputs `nodes.csv` and `edges.csv` under `data/`.
 
 ### 3. Compile the C++ Backend
-Compile the search engine with high-level optimizations (`-O3`):
+Compile the search engine:
 ```bash
-g++ -O3 -std=c++17 main.cpp -o main.exe -static -static-libgcc -static-libstdc++
+make
 ```
 
 ### 4. Launch the Web Interface
@@ -125,8 +125,7 @@ Open your browser and navigate to `http://127.0.0.1:29000`. Click on the map to 
 
 ---
 
-## 🗺️ Next Steps & Roadmap
+## Next Steps & Roadmap
 
-* **Bidirectional Dijkstra / A***: Implement concurrent search outward from both the start and end nodes to further reduce query execution time.
 * **UI Distance Metrics**: Display the computed shortest path distance in meters/kilometers directly on the Leaflet.js card.
 * **Search Expansion Animation**: Modify the C++ engine to output visited nodes in expansion order to visualize how A* prunes the search space compared to Dijkstra.
