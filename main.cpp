@@ -9,6 +9,7 @@
 #include "include/Graph.h"
 #include "include/Dijkstra.h"
 #include "include/AStar.h"
+#include "include/BidirDijkstra.h"
 
 const double inf = std::numeric_limits<double>::infinity();
 
@@ -66,7 +67,7 @@ int main() {
         int end_node = getNearestNode(end_lat, end_lon, nodes);
 
         // Run A*
-        auto [a_distance, a_path] = aStar(graph, nodes, start_node, end_node);
+        auto [a_distance, a_nodes_visited, a_path] = aStar(graph, nodes, start_node, end_node);
         
         if (a_distance != inf){
             // Prints strict JSON array

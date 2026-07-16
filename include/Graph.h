@@ -11,5 +11,6 @@ typedef std::vector<std::pair<double, double>> Nodes;
 // A struct to cleanly package the results of any algorithm
 struct RouteResult {
     double distance;
+    int nodes_visited;
     std::vector<int> path;
 };

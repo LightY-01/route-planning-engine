@@ -16,12 +16,17 @@ double heuristic(double lat1,double lon1,double lat2,double lon2){
 
 // A* algorithm implementation
 RouteResult aStar(Graph &graph,Nodes &nodes,int start, int end) {
+    if (start == end) return {0.0, 1, {start}};
+
     const double inf = std::numeric_limits<double>::infinity();
     const int num_nodes = graph.size();
+    
     std::vector<double> dist(num_nodes, inf);
     std::vector<int> parent(num_nodes, -1);
     std::vector<bool> vis(num_nodes, false);
     std::priority_queue<std::pair<double,int>, std::vector<std::pair<double,int>>, std::greater<>> pq;
+
+    int nodes_visited = 0;
     
     dist[start] = 0;
     pq.push({heuristic(nodes[start].first,nodes[start].second,nodes[end].first,nodes[end].second),start});
@@ -31,6 +36,7 @@ RouteResult aStar(Graph &graph,Nodes &nodes,int start, int end) {
         if (u == end) break;
         if (vis[u]) continue;
         vis[u] = true;
+        nodes_visited++;
         for (auto &[v, w]: graph[u]){
             if (dist[v] > dist[u] + w){
                 dist[v] = dist[u] + w;
@@ -40,7 +46,7 @@ RouteResult aStar(Graph &graph,Nodes &nodes,int start, int end) {
             }
         }
     }
-    if (dist[end] == inf) return {inf, {}};
+    if (dist[end] == inf) return {inf, nodes_visited, {}};
     
     // Reconstruct path
     std::vector<int> path;
@@ -50,5 +56,5 @@ RouteResult aStar(Graph &graph,Nodes &nodes,int start, int end) {
         curr = parent[curr];
     }
     std::reverse(path.begin(),path.end());
-    return {dist[end], path};
+    return {dist[end], nodes_visited, path};
 }

@@ -65,3 +65,33 @@ void loadNodes(Nodes &nodes, const std::string& filename){
     node_file.close();
     std::cout << "Nodes loaded successfully.\n";
 }
+
+void loadReverseGraph(Graph &graph, const std::string& filename) {
+    std::ifstream edge_file(filename);
+    std::string line;
+
+    // Skip header row
+    std::getline(edge_file,line);
+
+    while (std::getline(edge_file, line)) {
+        std::istringstream iss(line);
+        std::string token;
+
+        int u,v;
+        double distance;
+
+        std::getline(iss, token, ',');
+        u = std::stoi(token);
+
+        std::getline(iss, token, ',');
+        v = std::stoi(token);
+
+        std::getline(iss, token, ',');
+        distance = std::stod(token);
+
+        graph[v].push_back({u,distance});
+    }
+
+    edge_file.close();
+    std::cout << "Reverse graph loaded successfully.\n";
+}
